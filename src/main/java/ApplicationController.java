@@ -94,6 +94,18 @@ public class ApplicationController {
 
         runnerDao.createRunner(newRunner);
 
+        System.out.println("UPDATING runner");
+        Runner updatedRunner = new Runner();
+        updatedRunner.setRunnerId(1);
+        updatedRunner.setFirstName("Joe");
+        updatedRunner.setLastName("MacNCheese");
+        updatedRunner.setTeamId(1);
+        runnerDao.updateRunner(updatedRunner);
+
+        System.out.println("The new runner #1");
+
+        System.out.println(runnerDao.getRunnerById(1));
+
 
        // displayMainMenu();
     }

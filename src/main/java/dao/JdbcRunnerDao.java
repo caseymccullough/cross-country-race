@@ -103,13 +103,37 @@ public class JdbcRunnerDao implements RunnerDao{
     @Override
     public Runner updateRunner(Runner runner) {
         Runner updatedRunner = null;
-        String sql = "UPDATE runner SET runner_id=?, team_id=?, first_name=?, last_name=?" +
-                " WHERE <condition>;";
+        int rowsAffected = 0;
+
+        String sql = "UPDATE runner SET team_id=?, first_name=?, last_name=?" +
+                " WHERE runner_id = ?;";
+
+        try {
+            rowsAffected = jdbcTemplate.update(sql, runner.getTeamId(), runner.getFirstName(), runner.getLastName(), runner.getRunnerId());
+            if (rowsAffected == 0) {
+                throw new DaoException("Zero rows affected. Expecting at least one");
+            }
+            updatedRunner = getRunnerById(runner.getRunnerId());
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return updatedRunner;
     }
 
     @Override
-    public int deleteRunner(int runnerId) {
-        return 0;
+    public int deleteRunnerById(int runnerId) {
+        int rowsAffected = 0;
+        String sql = "DELETE FROM runner WHERE runner_id = ?;";
+        try {
+            rowsAffected = jdbcTemplate.update(sql, runnerId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return rowsAffected;
     }
 
     private Runner mapRowToRunner (SqlRowSet results){

@@ -15,6 +15,6 @@ public interface RunnerDao {
 
     Runner updateRunner (Runner runner);
 
-    int deleteRunner (int runnerId);
+    int deleteRunnerById (int runnerId);
 
 }
