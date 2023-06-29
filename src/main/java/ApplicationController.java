@@ -1,7 +1,10 @@
 
 
+import dao.JdbcRunnerDao;
 import dao.JdbcTeamDao;
+import dao.RunnerDao;
 import dao.TeamDao;
+import model.Runner;
 import model.Team;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import util.BasicConsole;
@@ -16,6 +19,7 @@ public class ApplicationController {
     private final BasicConsole console;
 //    private final ApplicationView view;
     private TeamDao teamDao;
+    private RunnerDao runnerDao;
 
 
     public ApplicationController(BasicConsole console) {
@@ -25,6 +29,7 @@ public class ApplicationController {
         // Set DataSource for campground database and assign to all the JDBC-DAOs
         DataSource dataSource = setupDataSource(DB_NAME);
         teamDao = new JdbcTeamDao(dataSource);
+        runnerDao = new JdbcRunnerDao(dataSource);
         //campgroundDao = new JdbcCampgroundDao(dataSource);
         //parkDao = new JdbcParkDao(dataSource);
     }
@@ -69,6 +74,25 @@ public class ApplicationController {
             System.out.println(team);
         }
 
+        System.out.println("RUNNER TESTS");
+
+        Runner firstRunner = runnerDao.getRunnerById(1);
+        System.out.println(firstRunner);
+
+
+        List<Runner> teamOne = runnerDao.getRunnersByTeamId(1);
+        System.out.println("TEAM ONE Runners");
+        for(Runner runner : teamOne){
+            System.out.println(runner);
+        }
+
+        System.out.println("CREATING runner");
+        Runner newRunner = new Runner ();
+        newRunner.setTeamId(1);
+        newRunner.setFirstName("JJ");
+        newRunner.setLastName("Watt");
+
+        runnerDao.createRunner(newRunner);
 
 
        // displayMainMenu();

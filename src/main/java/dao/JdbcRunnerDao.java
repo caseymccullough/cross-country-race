@@ -21,7 +21,20 @@ public class JdbcRunnerDao implements RunnerDao{
 
     @Override
     public Runner getRunnerById(int runnerId) {
-        return null;
+        Runner runner = null;
+        String sql = "SELECT runner_id, team_id, first_name, last_name" +
+                " FROM runner WHERE runner_id = ?;";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, runnerId);
+            if (results.next()) {
+                runner = mapRowToRunner(results);
+            }
+        } catch (CannotGetJdbcConnectionException e){
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return runner;
     }
 
     @Override
@@ -47,7 +60,7 @@ public class JdbcRunnerDao implements RunnerDao{
     @Override
     public List<Runner> getRunnersByTeamId(int teamId) {
         List<Runner> runners = new ArrayList<>();
-        String sql = "SELECT SELECT runner_id, team_id, first_name, last_name" +
+        String sql = "SELECT runner_id, team_id, first_name, last_name" +
                 " FROM runner WHERE team_id = ?;";
         try {
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql, teamId);
@@ -66,12 +79,32 @@ public class JdbcRunnerDao implements RunnerDao{
 
     @Override
     public Runner createRunner(Runner runner) {
-        return null;
+        /*
+        NOTE: You need to use queryForObject() (instead of update()) or you'll get
+        .BadSqlGrammarException
+         */
+
+        Runner newRunner = null;
+        String sql = "INSERT INTO runner (team_id, first_name, last_name)" +
+                " VALUES (?, ?, ?) RETURNING runner_id;";
+        System.out.println(sql );
+        // Note w/o int.class, this triggers the DataIntegrityViolation Exception.
+        try {
+            int newRunnerId = jdbcTemplate.queryForObject(sql, int.class, runner.getTeamId(), runner.getFirstName(), runner.getLastName());
+            newRunner = getRunnerById(newRunnerId);
+        } catch (CannotGetJdbcConnectionException e){
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+        return newRunner;
     }
 
     @Override
     public Runner updateRunner(Runner runner) {
-        return null;
+        Runner updatedRunner = null;
+        String sql = "UPDATE runner SET runner_id=?, team_id=?, first_name=?, last_name=?" +
+                " WHERE <condition>;";
     }
 
     @Override
