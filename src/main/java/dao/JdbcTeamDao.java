@@ -2,6 +2,7 @@ package dao;
 
 import exception.DaoException;
 import model.Team;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -58,17 +59,75 @@ public class JdbcTeamDao implements TeamDao{
 
     @Override
     public Team createTeam(Team team) {
-        return null;
+
+        Team newTeam = null;
+        // notice int.class is 2nd parameter
+        String sql = "INSERT INTO team(school_name, mascot) VALUES (?, ?) RETURNING team_id;";
+
+        try {
+            int newTeamId = jdbcTemplate.queryForObject(sql, int.class, team.getSchoolName(), team.getMascot());
+            newTeam  = getTeamById(newTeamId);
+        } catch (CannotGetJdbcConnectionException e){
+            throw new DaoException("Cannot connect to the database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation", e);
+        }
+
+        return newTeam;
     }
 
     @Override
     public Team updateTeam(Team team) {
-        return null;
+
+        Team updatedTeam = null;
+        String sql = "UPDATE team SET school_name=?, mascot=? WHERE team_id=?;";
+        try {
+            //
+            int rowsModified = jdbcTemplate.update(sql, team.getSchoolName(), team.getMascot(), team.getTeamId());
+            if (rowsModified == 0) {
+                throw new DaoException("Zero rows affected. Expected at least one.");
+            }
+            updatedTeam = getTeamById(team.getTeamId());
+
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation");
+        }
+        return updatedTeam;
+
     }
 
     @Override
     public int deleteTeamById(int teamId) {
-        return 0;
+
+        /*
+            NOTE: Need to first delete coach and runners who are on each team.
+        */
+
+        int numTeamsDeleted = 0;
+        String deleteRunnersSql = "DELETE FROM runner WHERE team_id = ?";
+        String deleteCoachesSql = "DELETE FROM coach WHERE team_id = ?";
+        String deleteTeamSql = "DELETE FROM team WHERE team_id = ?";
+
+        try {
+            // First delete the runners who are on the team
+            int runnersDeleted = jdbcTemplate.update(deleteRunnersSql, teamId);
+            System.out.println("Runners deleted: " + runnersDeleted);
+
+            // Also delete the coaches who are on the team
+            int coachesDeleted = jdbcTemplate.update(deleteCoachesSql, teamId);
+            System.out.println("Coaches deleted: " + coachesDeleted);
+
+            // Delete the team itself
+            numTeamsDeleted = jdbcTemplate.update(deleteTeamSql, teamId);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Cannot connect to database", e);
+        } catch (DataIntegrityViolationException e) {
+            throw new DaoException("Data integrity violation");
+        }
+        return numTeamsDeleted;
+
     }
 
     private Team mapRowToTeam (SqlRowSet results){

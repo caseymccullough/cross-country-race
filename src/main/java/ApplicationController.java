@@ -41,6 +41,36 @@ public class ApplicationController {
         for (Team team : allTeams) {
             System.out.println(team);
         }
+
+        Team newTeam = new Team ();
+        newTeam.setSchoolName("Xavier");
+        newTeam.setMascot("Gators");
+
+        Team returnedTeam = teamDao.createTeam(newTeam);
+        System.out.println("Added Team: ");
+        System.out.println(returnedTeam);
+
+        Team team4 = teamDao.getTeamById(4);
+        team4.setSchoolName("Slytherin");
+        team4.setMascot("Snakes");
+
+        System.out.println("Updating team");
+        teamDao.updateTeam(team4);
+
+        allTeams = teamDao.getTeams();
+        for (Team team : allTeams) {
+            System.out.println(team);
+        }
+
+        System.out.println("Deleting team 8");
+        teamDao.deleteTeamById(8);
+        allTeams = teamDao.getTeams();
+        for (Team team : allTeams) {
+            System.out.println(team);
+        }
+
+
+
        // displayMainMenu();
     }
 
